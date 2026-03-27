@@ -1,0 +1,56 @@
+{% extends 'incidents/base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}<i class="bi bi-bell-fill text-warning me-2"></i>Mes notifications{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end mb-3">
+  <button class="btn btn-sm btn-outline-secondary" onclick="marquerToutesLues()">
+    <i class="bi bi-check2-all me-1"></i>Tout marquer comme lu
+  </button>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    {% for notif in notifications %}
+    <div class="d-flex gap-3 px-4 py-3 border-bottom {% if not notif.lue %}bg-primary bg-opacity-5{% endif %}">
+      <div class="mt-1">
+        <div class="rounded-circle d-flex align-items-center justify-content-center {% if not notif.lue %}bg-primary{% else %}bg-secondary{% endif %} bg-opacity-10"
+             style="width:36px;height:36px;min-width:36px">
+          <i class="bi bi-bell {% if not notif.lue %}text-primary{% else %}text-secondary{% endif %}"></i>
+        </div>
+      </div>
+      <div class="flex-grow-1">
+        <div class="{% if not notif.lue %}fw-500{% endif %}">{{ notif.message }}</div>
+        {% if notif.incident %}
+        <a href="{% url 'detail_incident' notif.incident.pk %}" class="text-muted text-decoration-none small">
+          <i class="bi bi-arrow-right me-1"></i>Voir l'incident #{{ notif.incident.id }}
+        </a>
+        {% endif %}
+        <div class="text-muted" style="font-size:.75rem;margin-top:2px">{{ notif.date_creation|date:"d/m/Y à H:i" }}</div>
+      </div>
+      {% if not notif.lue %}
+      <div class="mt-2">
+        <span class="badge bg-primary" style="font-size:.6rem">Nouveau</span>
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-bell-slash d-block fs-2 mb-2 opacity-25"></i>
+      Aucune notification
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function marquerToutesLues() {
+  fetch("{% url 'marquer_notifs_lues' %}", {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+  }).then(() => location.reload());
+}
+</script>
+{% endblock %}

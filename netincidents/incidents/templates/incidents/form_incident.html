@@ -1,0 +1,116 @@
+{% extends 'incidents/base.html' %}
+{% block title %}{{ action }} un incident{% endblock %}
+{% block page_title %}
+  <i class="bi bi-{% if action == 'Créer' %}plus-circle-fill text-success{% else %}pencil-fill text-primary{% endif %} me-2"></i>
+  {{ action }} un incident
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="card">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <span>{% if action == 'Créer' %}Nouveau ticket d'incident{% else %}Modification — Incident #{{ incident.id }}{% endif %}</span>
+        <a href="{% url 'liste_incidents' %}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+      </div>
+      <div class="card-body">
+        <form method="post" id="formIncident">
+          {% csrf_token %}
+
+          <!-- INFORMATIONS GÉNÉRALES -->
+          <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size:.75rem;letter-spacing:.06em">
+            <i class="bi bi-info-circle me-1"></i>Informations générales
+          </h6>
+          <div class="mb-3">
+            <label class="form-label fw-500">Titre de l'incident <span class="text-danger">*</span></label>
+            {{ form.titre }}
+            {% if form.titre.errors %}<div class="text-danger small mt-1">{{ form.titre.errors }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-500">Description <span class="text-danger">*</span></label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label fw-500">Catégorie</label>
+              {{ form.categorie }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-500">Priorité</label>
+              {{ form.priorite }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-500">Statut</label>
+              {{ form.statut }}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-500">Assigné à</label>
+            {{ form.assigne_a }}
+          </div>
+
+          <hr class="my-4">
+
+          <!-- ÉQUIPEMENTS -->
+          <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size:.75rem;letter-spacing:.06em">
+            <i class="bi bi-hdd-network me-1"></i>Équipements concernés
+          </h6>
+          <div class="mb-3">
+            <label class="form-label fw-500">Équipements (Ctrl+clic pour sélection multiple)</label>
+            {{ form.equipements }}
+          </div>
+
+          <hr class="my-4">
+
+          <!-- ANALYSE -->
+          <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size:.75rem;letter-spacing:.06em">
+            <i class="bi bi-search me-1"></i>Analyse technique
+          </h6>
+          <div class="mb-3">
+            <label class="form-label fw-500">Impact métier</label>
+            {{ form.impact }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-500">Cause racine</label>
+            {{ form.cause_racine }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-500">Solution appliquée</label>
+            {{ form.solution_appliquee }}
+          </div>
+
+          <!-- BOUTONS -->
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-{% if action == 'Créer' %}plus-circle{% else %}check-circle{% endif %} me-2"></i>
+              {{ action }} l'incident
+            </button>
+            <a href="{% if incident %}{% url 'detail_incident' incident.pk %}{% else %}{% url 'liste_incidents' %}{% endif %}"
+               class="btn btn-outline-secondary px-4">
+              <i class="bi bi-x-circle me-1"></i>Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Coloriser le select priorité dynamiquement
+const selPriorite = document.querySelector('[name="priorite"]');
+const colors = { critique: '#fee2e2', haute: '#fff7ed', moyenne: '#eff6ff', basse: '#f0fdf4' };
+function updatePrioriteColor() {
+  selPriorite.style.background = colors[selPriorite.value] || '';
+}
+selPriorite.addEventListener('change', updatePrioriteColor);
+updatePrioriteColor();
+</script>
+{% endblock %}

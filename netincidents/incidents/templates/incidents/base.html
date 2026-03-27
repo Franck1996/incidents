@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NetIncidents{% endblock %} — Gestion d'incidents réseaux</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-width: 260px;
+      --sidebar-bg: #0f172a;
+      --sidebar-text: #94a3b8;
+      --sidebar-active: #3b82f6;
+      --topbar-h: 64px;
+      --accent: #3b82f6;
+      --accent-dark: #1d4ed8;
+    }
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f1f5f9; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh;
+      width: var(--sidebar-width); background: var(--sidebar-bg);
+      z-index: 1000; transition: all .3s ease; overflow-y: auto;
+    }
+    #sidebar .sidebar-brand {
+      padding: 1.5rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    #sidebar .brand-icon {
+      width: 40px; height: 40px; background: #f69b3b;
+      border-radius: 10px; display: inline-flex; align-items: center;
+      justify-content: center; font-size: 1.25rem; margin-right: .75rem;
+    }
+    #sidebar .brand-text { color: #dd1313; font-weight: 700; font-size: 1.1rem; }
+    #sidebar .brand-sub { color: #1cdd07; font-size: .7rem; }
+    #sidebar .nav-section {
+      padding: .75rem 1.25rem .25rem;
+      color: #0a9fdb; font-size: .7rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    #sidebar .nav-link {
+      color: #d99a07; padding: .625rem 1.25rem;
+      border-radius: 8px; margin: 2px .75rem;
+      display: flex; align-items: center; gap: .75rem;
+      font-size: .875rem; transition: all .2s;
+    }
+    #sidebar .nav-link:hover { background: rgba(255,255,255,.07); color: #e2e8f0; }
+    #sidebar .nav-link.active { background: rgba(59,130,246,.2); color: var(--accent); font-weight: 600; }
+    #sidebar .nav-link .bi { font-size: 1rem; width: 18px; text-align: center; }
+    #sidebar .badge-nav { margin-left: auto; font-size: .65rem; }
+
+    /* ── TOPBAR ── */
+    #topbar {
+      position: fixed; top: 0; left: var(--sidebar-width); right: 0;
+      height: var(--topbar-h); background: #fff;
+      border-bottom: 1px solid #e2e8f0; z-index: 999;
+      display: flex; align-items: center; padding: 0 1.5rem;
+      gap: 1rem;
+    }
+    #topbar .page-title { font-weight: 600; font-size: 1.1rem; flex: 1; }
+    #topbar .topbar-btn {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      color: #64748b; cursor: pointer; transition: all .2s;
+      text-decoration: none; position: relative;
+    }
+    #topbar .topbar-btn:hover { background: #e2e8f0; color: #1e293b; }
+    .notif-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #ef4444; color: #fff; border-radius: 50%;
+      width: 16px; height: 16px; font-size: .6rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── MAIN CONTENT ── */
+    #main {
+      margin-left: var(--sidebar-width);
+      padding-top: var(--topbar-h);
+      min-height: 100vh;
+    }
+    .main-inner { padding: 1.75rem; }
+
+    /* ── CARDS ── */
+    .card { border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: none; }
+    .card-header { background: #fff; border-bottom: 1px solid #e2e8f0; font-weight: 600; }
+
+    /* ── STAT CARDS ── */
+    .stat-card {
+      border-radius: 12px; padding: 1.25rem;
+      border: 1px solid #e2e8f0; background: #fff;
+    }
+    .stat-card .stat-icon {
+      width: 46px; height: 46px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+    }
+    .stat-card .stat-value { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+    .stat-card .stat-label { color: #64748b; font-size: .8rem; margin-top: .25rem; }
+
+    /* ── BADGES PRIORITÉ / STATUT ── */
+    .badge-critique { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .badge-haute    { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+    .badge-moyenne  { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .badge-basse    { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .badge-ouvert   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .badge-en_cours { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .badge-resolu   { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .badge-ferme    { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+    .incident-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 500;
+    }
+
+    /* ── TIMELINE HISTORIQUE ── */
+    .timeline { position: relative; padding-left: 1.5rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 7px; top: 0; bottom: 0;
+      width: 2px; background: #e2e8f0;
+    }
+    .timeline-item { position: relative; margin-bottom: 1.25rem; }
+    .timeline-dot {
+      position: absolute; left: -1.5rem; width: 14px; height: 14px;
+      border-radius: 50%; border: 2px solid #e2e8f0; background: #fff;
+      top: 4px;
+    }
+
+    /* ── TABLES ── */
+    .table-hover tbody tr:hover { background: #f8fafc; }
+    .table th { font-size: .8rem; font-weight: 600; color: #64748b;
+                text-transform: uppercase; letter-spacing: .04em; }
+
+    /* ── ALERTS / MESSAGES ── */
+    .django-messages { position: fixed; top: calc(var(--topbar-h) + 1rem); right: 1rem; z-index: 9999; width: 360px; }
+
+    /* ── DARK MODE TOGGLE ── */
+    [data-bs-theme="dark"] body { background: #0f172a; }
+    [data-bs-theme="dark"] #topbar { background: #1e293b; border-color: #334155; }
+    [data-bs-theme="dark"] .card { background: #1e293b; border-color: #334155; }
+    [data-bs-theme="dark"] .stat-card { background: #1e293b; border-color: #334155; }
+    [data-bs-theme="dark"] .table th { color: #94a3b8; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.show { transform: translateX(0); }
+      #topbar { left: 0; }
+      #main { margin-left: 0; }
+    }
+
+    /* ── MISC ── */
+    .btn-primary { background: var(--accent); border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+    .form-control:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    .page-link { color: var(--accent); }
+    .page-item.active .page-link { background: var(--accent); border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-brand d-flex align-items-center">
+    <div class="brand-icon text-white"><i class="bi bi-wifi"></i></div>
+    <div>
+      <div class="brand-text">NetIncidents</div>
+      <div class="brand-sub">Gestion des incidents réseau</div>
+    </div>
+  </div>
+
+  <div class="pt-2 pb-3">
+    <div class="nav-section">Principal</div>
+    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <i class="bi bi-grid-1x2-fill"></i> Tableau de bord
+    </a>
+    <a href="{% url 'liste_incidents' %}" class="nav-link {% if 'incident' in request.resolver_match.url_name and 'equipement' not in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-exclamation-triangle-fill"></i> Incidents
+      {% if nb_incidents_ouverts %}<span class="badge bg-danger badge-nav">{{ nb_incidents_ouverts }}</span>{% endif %}
+    </a>
+    <a href="{% url 'creer_incident' %}" class="nav-link">
+      <i class="bi bi-plus-circle-fill"></i> Nouvel incident
+    </a>
+
+    <div class="nav-section">Ressources</div>
+    <a href="{% url 'liste_equipements' %}" class="nav-link {% if 'equipement' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-hdd-network-fill"></i> Équipements
+    </a>
+
+    <div class="nav-section">Analyse</div>
+    <a href="{% url 'rapports' %}" class="nav-link {% if request.resolver_match.url_name == 'rapports' %}active{% endif %}">
+      <i class="bi bi-file-earmark-bar-graph-fill"></i> Rapports & Stats
+    </a>
+    <a href="{% url 'historique' %}" class="nav-link {% if request.resolver_match.url_name == 'historique' %}active{% endif %}">
+      <i class="bi bi-clock-history"></i> Historique
+    </a>
+    <a href="{% url 'notifications' %}" class="nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+      <i class="bi bi-bell-fill"></i> Notifications
+      {% if nb_notifs > 0 %}<span class="badge bg-danger badge-nav">{{ nb_notifs }}</span>{% endif %}
+    </a>
+
+    <div class="nav-section">Compte</div>
+    <a href="{% url 'mon_profil' %}" class="nav-link {% if request.resolver_match.url_name == 'mon_profil' %}active{% endif %}">
+      <i class="bi bi-person-circle"></i> Mon profil
+    </a>
+    <a href="/admin/" class="nav-link" target="_blank">
+      <i class="bi bi-shield-lock-fill"></i> Administration
+    </a>
+    <a href="{% url 'logout' %}" class="nav-link" onclick="return confirm('Se déconnecter ?')">
+      <i class="bi bi-box-arrow-left"></i> Déconnexion
+    </a>
+  </div>
+</nav>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <button class="d-md-none btn btn-sm me-2" onclick="document.getElementById('sidebar').classList.toggle('show')">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+  <span class="page-title">{% block page_title %}NetIncidents{% endblock %}</span>
+
+  <!-- Boutons topbar -->
+  <a href="{% url 'notifications' %}" class="topbar-btn" title="Notifications">
+    <i class="bi bi-bell"></i>
+    {% if nb_notifs > 0 %}<span class="notif-badge">{{ nb_notifs }}</span>{% endif %}
+  </a>
+  <a href="{% url 'mon_profil' %}" class="topbar-btn" title="Profil">
+    <i class="bi bi-person"></i>
+  </a>
+  <button class="topbar-btn" id="themeToggle" title="Mode sombre" onclick="toggleTheme()">
+    <i class="bi bi-moon-stars"></i>
+  </button>
+</div>
+
+<!-- MESSAGES DJANGO -->
+{% if messages %}
+<div class="django-messages">
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-{% if msg.tags == 'success' %}check-circle{% elif msg.tags == 'error' %}x-circle{% else %}info-circle{% endif %} me-2"></i>
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- MAIN CONTENT -->
+<main id="main">
+  <div class="main-inner">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+  // Auto-hide messages after 5s
+  setTimeout(() => {
+    document.querySelectorAll('.django-messages .alert').forEach(el => {
+      new bootstrap.Alert(el).close();
+    });
+  }, 5000);
+
+  // Theme toggle
+  function toggleTheme() {
+    const html = document.documentElement;
+    const dark = html.getAttribute('data-bs-theme') === 'dark';
+    html.setAttribute('data-bs-theme', dark ? 'light' : 'dark');
+    localStorage.setItem('theme', dark ? 'light' : 'dark');
+    const icon = document.querySelector('#themeToggle .bi');
+    icon.className = dark ? 'bi bi-moon-stars' : 'bi bi-sun';
+  }
+  // Restore saved theme
+  (function() {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+      document.documentElement.setAttribute('data-bs-theme', saved);
+      const icon = document.querySelector('#themeToggle .bi');
+      if (icon) icon.className = saved === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
+    }
+  })();
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,69 @@
+{% extends 'incidents/base.html' %}
+{% block title %}Équipements{% endblock %}
+{% block page_title %}<i class="bi bi-hdd-network-fill text-primary me-2"></i>Équipements réseau{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end mb-3">
+  <a href="{% url 'creer_equipement' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg me-1"></i>Ajouter un équipement
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-3">Nom</th>
+          <th>Type</th>
+          <th>Adresse IP</th>
+          <th>Localisation</th>
+          <th>Statut</th>
+          <th>Incidents liés</th>
+          <th class="text-end pe-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for eq in equipements %}
+        <tr>
+          <td class="ps-3 fw-500">
+            <i class="bi bi-{% if eq.type_equipement == 'routeur' %}router{% elif eq.type_equipement == 'switch' %}diagram-3{% elif eq.type_equipement == 'firewall' %}shield-fill{% elif eq.type_equipement == 'serveur' %}server{% else %}hdd-network{% endif %} text-primary me-2"></i>
+            {{ eq.nom }}
+          </td>
+          <td class="text-muted small">{{ eq.get_type_equipement_display }}</td>
+          <td><code class="small">{{ eq.adresse_ip|default:"—" }}</code></td>
+          <td class="text-muted small">{{ eq.localisation|default:"—" }}</td>
+          <td>
+            <span class="incident-badge
+              {% if eq.statut == 'actif' %}badge-resolu{% elif eq.statut == 'inactif' %}badge-ouvert{% else %}badge-en_cours{% endif %}">
+              {{ eq.get_statut_display }}
+            </span>
+          </td>
+          <td>
+            {% if eq.nb_incidents %}
+            <a href="{% url 'liste_incidents' %}?equipement={{ eq.pk }}" class="text-decoration-none">
+              <span class="badge bg-secondary">{{ eq.nb_incidents }}</span>
+            </a>
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </td>
+          <td class="text-end pe-3">
+            <div class="btn-group btn-group-sm">
+              <a href="{% url 'modifier_equipement' eq.pk %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'supprimer_equipement' eq.pk %}" class="btn btn-outline-danger"
+                 onclick="return confirm('Supprimer cet équipement ?')"><i class="bi bi-trash"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-5 text-muted">
+            <i class="bi bi-hdd-network d-block fs-2 mb-2 opacity-25"></i>
+            Aucun équipement enregistré
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'incidents/base.html' %}
+{% block title %}Incident #{{ incident.id }}{% endblock %}
+{% block page_title %}
+  <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+  Incident #{{ incident.id }} — {{ incident.titre|truncatechars:40 }}
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- COL PRINCIPALE -->
+  <div class="col-lg-8">
+
+    <!-- HEADER INCIDENT -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          <span class="incident-badge badge-{{ incident.priorite }} fs-6">
+            <i class="bi bi-circle-fill" style="font-size:.45rem"></i>
+            {{ incident.get_priorite_display }}
+          </span>
+          <span class="incident-badge badge-{{ incident.statut }} fs-6">{{ incident.get_statut_display }}</span>
+          <span class="incident-badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0">
+            <i class="bi bi-tag me-1"></i>{{ incident.get_categorie_display }}
+          </span>
+        </div>
+        <h3 class="fw-bold mb-2">{{ incident.titre }}</h3>
+        <p class="text-muted mb-0">{{ incident.description }}</p>
+      </div>
+    </div>
+
+    <!-- IMPACT / CAUSE / SOLUTION -->
+    {% if incident.impact or incident.cause_racine or incident.solution_appliquee %}
+    <div class="card mb-4">
+      <div class="card-header py-3"><i class="bi bi-info-circle-fill text-primary me-2"></i>Analyse technique</div>
+      <div class="card-body">
+        {% if incident.impact %}
+        <div class="mb-3">
+          <div class="fw-600 text-muted small mb-1 text-uppercase" style="font-size:.72rem;letter-spacing:.06em">Impact métier</div>
+          <p class="mb-0">{{ incident.impact }}</p>
+        </div>
+        {% endif %}
+        {% if incident.cause_racine %}
+        <div class="mb-3">
+          <div class="fw-600 text-muted small mb-1 text-uppercase" style="font-size:.72rem;letter-spacing:.06em">Cause racine</div>
+          <p class="mb-0">{{ incident.cause_racine }}</p>
+        </div>
+        {% endif %}
+        {% if incident.solution_appliquee %}
+        <div>
+          <div class="fw-600 text-muted small mb-1 text-uppercase" style="font-size:.72rem;letter-spacing:.06em">Solution appliquée</div>
+          <p class="mb-0">{{ incident.solution_appliquee }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- JOURNAL D'ACTIVITÉ -->
+    <div class="card mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-chat-left-dots-fill text-primary me-2"></i>Journal d'activité</span>
+        <span class="badge bg-secondary">{{ incident.commentaires.count }}</span>
+      </div>
+      <div class="card-body">
+        {% if incident.commentaires.all %}
+        <div class="timeline">
+          {% for com in incident.commentaires.all %}
+          <div class="timeline-item">
+            <div class="timeline-dot" style="
+              {% if com.type_commentaire == 'action' %}background:#22c55e;border-color:#22c55e
+              {% elif com.type_commentaire == 'escalade' %}background:#ef4444;border-color:#ef4444
+              {% elif com.type_commentaire == 'mise_a_jour' %}background:#f59e0b;border-color:#f59e0b
+              {% else %}background:#3b82f6;border-color:#3b82f6{% endif %}">
+            </div>
+            <div class="bg-light rounded p-3">
+              <div class="d-flex justify-content-between mb-1">
+                <div>
+                  <strong class="small">{{ com.auteur.get_full_name|default:com.auteur.username }}</strong>
+                  <span class="badge ms-1 small" style="
+                    {% if com.type_commentaire == 'action' %}background:#dcfce7;color:#15803d
+                    {% elif com.type_commentaire == 'escalade' %}background:#fee2e2;color:#dc2626
+                    {% elif com.type_commentaire == 'mise_a_jour' %}background:#fef9c3;color:#ca8a04
+                    {% else %}background:#dbeafe;color:#1d4ed8{% endif %}">
+                    {{ com.get_type_commentaire_display }}
+                  </span>
+                </div>
+                <small class="text-muted">{{ com.date_creation|date:"d/m/Y H:i" }}</small>
+              </div>
+              <p class="mb-0 small">{{ com.contenu }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-3">
+          <i class="bi bi-chat d-block fs-2 mb-2 opacity-25"></i>Aucune activité enregistrée
+        </div>
+        {% endif %}
+
+        <!-- FORM COMMENTAIRE -->
+        <hr class="my-3">
+        <h6 class="fw-bold mb-3">Ajouter une entrée</h6>
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-2">{{ form_commentaire.type_commentaire }}</div>
+          <div class="mb-3">{{ form_commentaire.contenu }}</div>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-send me-1"></i>Enregistrer
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- HISTORIQUE STATUTS -->
+    {% if historique %}
+    <div class="card">
+      <div class="card-header py-3"><i class="bi bi-clock-history text-primary me-2"></i>Historique des statuts</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr><th class="ps-3">Ancien statut</th><th>Nouveau statut</th><th>Par</th><th>Date</th></tr>
+          </thead>
+          <tbody>
+            {% for h in historique %}
+            <tr>
+              <td class="ps-3">
+                {% if h.ancien_statut %}<span class="incident-badge badge-{{ h.ancien_statut }}">{{ h.ancien_statut }}</span>{% else %}—{% endif %}
+              </td>
+              <td><span class="incident-badge badge-{{ h.nouveau_statut }}">{{ h.nouveau_statut }}</span></td>
+              <td class="text-muted small">{{ h.modifie_par.username|default:"—" }}</td>
+              <td class="text-muted small">{{ h.date_changement|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- COL LATÉRALE -->
+  <div class="col-lg-4">
+
+    <!-- ACTIONS RAPIDES -->
+    <div class="card mb-3">
+      <div class="card-header py-3">Actions rapides</div>
+      <div class="card-body d-grid gap-2">
+        <a href="{% url 'modifier_incident' incident.pk %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-pencil me-2"></i>Modifier l'incident
+        </a>
+        <a href="{% url 'rapport_pdf_incident' incident.pk %}" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-file-earmark-pdf me-2"></i>Télécharger le rapport PDF
+        </a>
+        <a href="{% url 'supprimer_incident' incident.pk %}" class="btn btn-outline-danger btn-sm"
+           onclick="return confirm('Supprimer définitivement cet incident ?')">
+          <i class="bi bi-trash me-2"></i>Supprimer
+        </a>
+      </div>
+    </div>
+
+    <!-- CHANGER STATUT -->
+    <div class="card mb-3">
+      <div class="card-header py-3">Changer le statut</div>
+      <div class="card-body d-grid gap-1">
+        {% for val, label in incident.STATUT %}
+        <button class="btn btn-sm {% if incident.statut == val %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                onclick="changerStatutRapide('{{ val }}')">
+          {{ label }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- INFORMATIONS -->
+    <div class="card mb-3">
+      <div class="card-header py-3">Informations</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <tr>
+            <td class="text-muted ps-3 py-2 small fw-600">Créé par</td>
+            <td class="py-2 small">{{ incident.cree_par.get_full_name|default:incident.cree_par.username }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted ps-3 py-2 small fw-600">Assigné à</td>
+            <td class="py-2 small">{{ incident.assigne_a.username|default:"Non assigné" }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted ps-3 py-2 small fw-600">Créé le</td>
+            <td class="py-2 small">{{ incident.date_creation|date:"d/m/Y H:i" }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted ps-3 py-2 small fw-600">Modifié le</td>
+            <td class="py-2 small">{{ incident.date_modification|date:"d/m/Y H:i" }}</td>
+          </tr>
+          {% if incident.date_resolution %}
+          <tr>
+            <td class="text-muted ps-3 py-2 small fw-600">Résolu le</td>
+            <td class="py-2 small">{{ incident.date_resolution|date:"d/m/Y H:i" }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted ps-3 py-2 small fw-600">Durée résol.</td>
+            <td class="py-2 small fw-bold text-success">{{ incident.duree_resolution }} h</td>
+          </tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+
+    <!-- ÉQUIPEMENTS CONCERNÉS -->
+    {% if incident.equipements.all %}
+    <div class="card">
+      <div class="card-header py-3"><i class="bi bi-hdd-network-fill me-2 text-primary"></i>Équipements concernés</div>
+      <div class="card-body p-0">
+        {% for eq in incident.equipements.all %}
+        <div class="px-3 py-2 border-bottom d-flex align-items-center gap-2">
+          <i class="bi bi-{% if eq.type_equipement == 'routeur' %}router{% elif eq.type_equipement == 'switch' %}diagram-3{% elif eq.type_equipement == 'serveur' %}server{% else %}hdd-network{% endif %} text-primary"></i>
+          <div>
+            <div class="small fw-500">{{ eq.nom }}</div>
+            <div class="text-muted" style="font-size:.7rem">{{ eq.adresse_ip|default:"sans IP" }} · {{ eq.get_type_equipement_display }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changerStatutRapide(statut) {
+  if (!confirm(`Changer le statut en "${statut}" ?`)) return;
+  fetch(`/incidents/{{ incident.pk }}/statut/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ statut })
+  })
+  .then(r => r.json())
+  .then(data => { if (data.success) location.reload(); });
+}
+</script>
+{% endblock %}

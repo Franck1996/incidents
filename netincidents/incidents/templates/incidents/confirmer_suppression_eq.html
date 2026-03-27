@@ -1,0 +1,26 @@
+{% extends 'incidents/base.html' %}
+{% block title %}Supprimer l'équipement{% endblock %}
+{% block page_title %}Confirmer la suppression{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card border-danger">
+      <div class="card-header bg-danger text-white py-3">
+        <i class="bi bi-exclamation-triangle me-2"></i>Confirmation de suppression
+      </div>
+      <div class="card-body text-center py-4">
+        <div class="text-danger fs-1 mb-3"><i class="bi bi-hdd-network"></i></div>
+        <h5>Supprimer l'équipement ?</h5>
+        <p class="text-muted">« {{ equipement.nom }} » ({{ equipement.adresse_ip|default:"sans IP" }})</p>
+        <div class="d-flex gap-2 justify-content-center mt-4">
+          <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger px-4"><i class="bi bi-trash me-2"></i>Confirmer</button>
+          </form>
+          <a href="{% url 'liste_equipements' %}" class="btn btn-outline-secondary px-4">Annuler</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

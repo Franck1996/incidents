@@ -1,0 +1,123 @@
+{% extends 'incidents/base.html' %}
+{% block title %}Rapports{% endblock %}
+{% block page_title %}<i class="bi bi-file-earmark-bar-graph-fill text-primary me-2"></i>Rapports & Statistiques{% endblock %}
+
+{% block content %}
+
+<!-- STATS GLOBALES -->
+<div class="row g-3 mb-4">
+  {% for label, val, color in stats.items|dictsort:"0" %}
+  {% endfor %}
+  <div class="col-6 col-md-3 col-lg-2">
+    <div class="stat-card text-center">
+      <div class="stat-value text-primary">{{ stats.total }}</div>
+      <div class="stat-label">Total</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3 col-lg-2">
+    <div class="stat-card text-center">
+      <div class="stat-value text-danger">{{ stats.ouverts }}</div>
+      <div class="stat-label">Ouverts</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3 col-lg-2">
+    <div class="stat-card text-center">
+      <div class="stat-value text-warning">{{ stats.en_cours }}</div>
+      <div class="stat-label">En cours</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3 col-lg-2">
+    <div class="stat-card text-center">
+      <div class="stat-value text-success">{{ stats.resolus }}</div>
+      <div class="stat-label">Résolus</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3 col-lg-2">
+    <div class="stat-card text-center">
+      <div class="stat-value text-secondary">{{ stats.fermes }}</div>
+      <div class="stat-label">Fermés</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3 col-lg-2">
+    <div class="stat-card text-center">
+      <div class="stat-value text-danger">{{ stats.critiques }}</div>
+      <div class="stat-label">Critiques</div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT PDF AVEC FILTRES -->
+<div class="card mb-4">
+  <div class="card-header py-3"><i class="bi bi-filter-circle text-primary me-2"></i>Générer un rapport PDF filtré</div>
+  <div class="card-body">
+    <form method="get" action="{% url 'rapport_pdf_global' %}" target="_blank">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label fw-500 small">Statut</label>
+          {{ form_filtre.statut }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-500 small">Priorité</label>
+          {{ form_filtre.priorite }}
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-500 small">Du</label>
+          {{ form_filtre.date_debut }}
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-500 small">Au</label>
+          {{ form_filtre.date_fin }}
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-danger w-100">
+            <i class="bi bi-file-earmark-pdf me-2"></i>Générer PDF
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- RAPPORTS RAPIDES -->
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body text-center py-4">
+        <div class="text-danger fs-1 mb-3"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+        <h6 class="fw-bold">Rapport complet</h6>
+        <p class="text-muted small">Tous les incidents sans filtre</p>
+        <a href="{% url 'rapport_pdf_global' %}" class="btn btn-danger btn-sm" target="_blank">
+          <i class="bi bi-download me-1"></i>Télécharger
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body text-center py-4">
+        <div class="text-warning fs-1 mb-3"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <h6 class="fw-bold">Incidents non résolus</h6>
+        <p class="text-muted small">Ouverts et en cours uniquement</p>
+        <a href="{% url 'rapport_pdf_global' %}?statut=ouvert" class="btn btn-warning btn-sm me-1" target="_blank">
+          Ouverts
+        </a>
+        <a href="{% url 'rapport_pdf_global' %}?statut=en_cours" class="btn btn-outline-warning btn-sm" target="_blank">
+          En cours
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body text-center py-4">
+        <div class="text-danger fs-1 mb-3"><i class="bi bi-fire"></i></div>
+        <h6 class="fw-bold">Incidents critiques</h6>
+        <p class="text-muted small">Priorité critique uniquement</p>
+        <a href="{% url 'rapport_pdf_global' %}?priorite=critique" class="btn btn-danger btn-sm" target="_blank">
+          <i class="bi bi-download me-1"></i>Télécharger
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

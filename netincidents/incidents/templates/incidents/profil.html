@@ -1,0 +1,86 @@
+{% extends 'incidents/base.html' %}
+{% block title %}Mon profil{% endblock %}
+{% block page_title %}<i class="bi bi-person-circle text-primary me-2"></i>Mon profil{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card text-center mb-3">
+      <div class="card-body py-4">
+        {% if profil.avatar %}
+        <img src="{{ profil.avatar.url }}" class="rounded-circle mb-3" width="90" height="90" style="object-fit:cover">
+        {% else %}
+        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3"
+             style="width:90px;height:90px;font-size:2.2rem">
+          <i class="bi bi-person-fill text-primary"></i>
+        </div>
+        {% endif %}
+        <h5 class="fw-bold mb-1">{{ request.user.get_full_name|default:request.user.username }}</h5>
+        <div class="text-muted small">@{{ request.user.username }}</div>
+        <span class="badge bg-primary bg-opacity-10 text-primary mt-2">{{ profil.get_role_display }}</span>
+        {% if profil.departement %}
+        <div class="text-muted small mt-2"><i class="bi bi-building me-1"></i>{{ profil.departement }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header py-3">Mes incidents récents</div>
+      <div class="card-body p-0">
+        {% for inc in mes_incidents_recents %}
+        <a href="{% url 'detail_incident' inc.pk %}" class="d-block px-3 py-2 border-bottom text-decoration-none text-dark">
+          <div class="d-flex align-items-center gap-2">
+            <span class="incident-badge badge-{{ inc.priorite }}" style="font-size:.65rem">{{ inc.get_priorite_display }}</span>
+            <span class="small flex-grow-1">{{ inc.titre|truncatechars:35 }}</span>
+          </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-3 text-muted small">Aucun incident créé</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header py-3"><i class="bi bi-pencil-fill text-primary me-2"></i>Modifier mon profil</div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-500">Prénom</label>
+              {{ form.first_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-500">Nom</label>
+              {{ form.last_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-500">Email</label>
+              {{ form.email }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-500">Téléphone</label>
+              {{ form.telephone }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-500">Département</label>
+              {{ form.departement }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-500">Photo de profil</label>
+              {{ form.avatar }}
+            </div>
+          </div>
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check-circle me-2"></i>Enregistrer les modifications
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
