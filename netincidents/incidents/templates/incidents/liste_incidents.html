@@ -2,6 +2,176 @@
 {% block title %}Incidents{% endblock %}
 {% block page_title %}<i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Liste des incidents{% endblock %}
 
+{% block extra_css %}
+<style>
+
+  .card {
+    background-color: #0f1923 !important;
+    border: 1px solid #1e2d3d !important;
+  }
+
+  /* --- Table générale --- */
+  table.table {
+    background-color: #0f1923 !important;
+    --bs-table-bg: #0f1923 !important;
+    --bs-table-color: #e2e8f0 !important;
+    --bs-table-hover-bg: #162130 !important;
+    --bs-table-hover-color: #f1f5f9 !important;
+    --bs-table-striped-bg: #0f1923 !important;
+    color: #e2e8f0 !important;
+  }
+
+  /* --- Toutes les cellules td et th --- */
+  table.table td,
+  table.table th {
+    background-color: #0f1923 !important;
+    color: #e2e8f0 !important;
+    border-color: #1e2d3d !important;
+  }
+
+  /* --- En-tête thead spécifiquement --- */
+  table.table thead tr th,
+  table.table thead.table-light tr th,
+  .table-light,
+  .table > :not(caption) > * {
+    background-color: #e8650a !important;
+    color: #ffffff !important;
+    border-color: #cf580a !important;
+    --bs-table-bg: #e8650a !important;
+    --bs-table-color: #ffffff !important;
+  }
+
+  /* Remettre les tbody sur le fond normal */
+  table.table tbody tr td {
+    background-color: #0f1923 !important;
+    color: #e2e8f0 !important;
+  }
+
+  /* --- Hover lignes --- */
+  table.table-hover tbody tr:hover td {
+    background-color: #162130 !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* --- Titre de l'incident (lien) --- */
+  table.table tbody td a {
+    color: #1a1d23 !important;
+    text-decoration: none !important;
+  }
+  table.table tbody td a:hover {
+    color: #444 !important;
+  }
+
+  /* --- Sous-titre catégorie --- */
+  table.table tbody td .text-muted {
+    color: #4a6278 !important;
+  }
+
+  /* --- Numéro # et textes secondaires --- */
+  table.table tbody td.text-muted,
+  table.table tbody td.small {
+    color: #8fa8be !important;
+  }
+
+  /* --- Liens de tri dans thead --- */
+  table.table thead a {
+    color: #ffffff !important;
+    text-decoration: none !important;
+  }
+  table.table thead a:hover {
+    color: #ffe0c0 !important;
+  }
+
+  /* --- Inputs et selects filtres --- */
+  .card input.form-control,
+  .card select.form-select,
+  .card input[type="date"] {
+    background-color: #0a1520 !important;
+    border: 1px solid #1e2d3d !important;
+    color: #e2e8f0 !important;
+  }
+  .card input.form-control::placeholder {
+    color: #4a6278 !important;
+  }
+  .card select.form-select option {
+    background-color: #0f1923 !important;
+    color: #e2e8f0 !important;
+  }
+
+  /* --- Compteur --- */
+  .text-muted small,
+  .text-muted.small {
+    color: #8fa8be !important;
+  }
+  .text-muted.small strong {
+    color: #e2e8f0 !important;
+  }
+
+  /* --- Boutons action dans le tableau --- */
+  table.table .btn-outline-secondary {
+    border-color: #2d4460 !important;
+    color: #8fa8be !important;
+    background: transparent !important;
+  }
+  table.table .btn-outline-secondary:hover {
+    background-color: #162130 !important;
+    color: #e2e8f0 !important;
+  }
+  table.table .btn-outline-primary {
+    border-color: #3b82f6 !important;
+    color: #3b82f6 !important;
+    background: transparent !important;
+  }
+  table.table .btn-outline-primary:hover {
+    background-color: #3b82f6 !important;
+    color: #fff !important;
+  }
+  table.table .btn-outline-danger {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+    background: transparent !important;
+  }
+  table.table .btn-outline-danger:hover {
+    background-color: #ef4444 !important;
+    color: #fff !important;
+  }
+
+  /* --- Dropdown statut --- */
+  .dropdown-menu {
+    background-color: #0f1923 !important;
+    border: 1px solid #1e2d3d !important;
+  }
+  .dropdown-item {
+    color: #e2e8f0 !important;
+  }
+  .dropdown-item:hover,
+  .dropdown-item:focus {
+    background-color: #162130 !important;
+    color: #f1f5f9 !important;
+  }
+  .dropdown-item.fw-bold {
+    color: #e8650a !important;
+  }
+
+  /* --- Pagination --- */
+  .page-link {
+    background-color: #0f1923 !important;
+    border-color: #1e2d3d !important;
+    color: #8fa8be !important;
+  }
+  .page-item.active .page-link {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #fff !important;
+  }
+
+  /* --- Message vide --- */
+  .text-center .text-muted {
+    color: #4a6278 !important;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- FILTRES -->
 <div class="card mb-4">
@@ -47,42 +217,66 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th class="ps-3">
-              <a href="?{% if tri == 'id' %}-{% endif %}id&{{ request.GET.urlencode }}" class="text-muted text-decoration-none">#</a>
-            </th>
-            <th>
-              <a href="?{% if tri == 'titre' %}-{% endif %}titre&{{ request.GET.urlencode }}" class="text-muted text-decoration-none">Titre</a>
-            </th>
-            <th>Catégorie</th>
-            <th>
-              <a href="?{% if tri == 'priorite' %}-{% endif %}priorite&{{ request.GET.urlencode }}" class="text-muted text-decoration-none">Priorité</a>
-            </th>
-            <th>
-              <a href="?{% if tri == 'statut' %}-{% endif %}statut&{{ request.GET.urlencode }}" class="text-muted text-decoration-none">Statut</a>
-            </th>
-            <th>Assigné à</th>
-            <th>
-              <a href="?{% if tri == 'date_creation' %}-{% endif %}date_creation&{{ request.GET.urlencode }}" class="text-muted text-decoration-none">Date</a>
-            </th>
-            <th class="text-end pe-3">Actions</th>
+           <th class="ps-3" style="font-weight:600; font-size:14px; color:#6c757d;">
+  <a href="?{% if tri == 'id' %}-{% endif %}id&{{ request.GET.urlencode }}" 
+     style="text-decoration:none; color:#6c757d;">
+    #
+  </a>
+</th>
+
+<th style="font-weight:600; font-size:14px; color:#0d6efd;">
+  <a href="?{% if tri == 'titre' %}-{% endif %}titre&{{ request.GET.urlencode }}" 
+     style="text-decoration:none; color:#0d6efd;">
+    Titre
+  </a>
+</th>
+
+<th style="font-weight:600; font-size:14px; color:#fd7e14; text-align:center;">
+  <a href="?{% if tri == 'priorite' %}-{% endif %}priorite&{{ request.GET.urlencode }}" 
+     style="text-decoration:none; color:#fd7e14;">
+    Priorité
+  </a>
+</th>
+
+<th style="font-weight:600; font-size:14px; color:#198754; text-align:center;">
+  <a href="?{% if tri == 'statut' %}-{% endif %}statut&{{ request.GET.urlencode }}" 
+     style="text-decoration:none; color:#198754;">
+    Statut
+  </a>
+</th>
+
+<th style="font-weight:600; font-size:14px; color:#6f42c1;">
+  Assigné à
+</th>
+
+<th style="font-weight:600; font-size:14px; color:#20c997; text-align:center;">
+  <a href="?{% if tri == 'date_creation' %}-{% endif %}date_creation&{{ request.GET.urlencode }}" 
+     style="text-decoration:none; color:#20c997;">
+    Date
+  </a>
+</th>
+
+<th class="text-end pe-3" style="font-weight:600; font-size:14px; color:#dc3545;">
+  Actions
+</th>
           </tr>
         </thead>
         <tbody>
           {% for inc in page_obj %}
           <tr>
             <td class="ps-3 fw-bold text-muted">#{{ inc.id }}</td>
-            <td style="max-width:280px">
+            <td style="max-width:320px">
               <a href="{% url 'detail_incident' inc.pk %}" class="text-decoration-none text-dark fw-500">
                 {{ inc.titre|truncatechars:55 }}
               </a>
-              {% if inc.equipements.exists %}
               <div class="text-muted" style="font-size:.72rem">
-                <i class="bi bi-hdd-network"></i> {{ inc.equipements.count }} équipement(s)
+                <i class="bi bi-folder me-1"></i>{{ inc.get_categorie_display }}
+                {% if inc.equipements.exists %}
+                <span class="ms-2">
+                  <i class="bi bi-hdd-network"></i> {{ inc.equipements.count }} équipement(s)
+                </span>
+                {% endif %}
               </div>
-              {% endif %}
-            </td>
-            <td>
-              <span class="text-muted small">{{ inc.get_categorie_display }}</span>
             </td>
             <td>
               <span class="incident-badge badge-{{ inc.priorite }}">
@@ -129,7 +323,7 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="8" class="text-center py-5">
+            <td colspan="7" class="text-center py-5">
               <i class="bi bi-search fs-2 text-muted d-block mb-2"></i>
               <div class="text-muted">Aucun incident trouvé</div>
               <a href="{% url 'creer_incident' %}" class="btn btn-sm btn-primary mt-3">Créer le premier incident</a>

@@ -5,6 +5,35 @@
   {{ action }} un incident
 {% endblock %}
 
+{% block extra_css %}
+<style>
+  select[name="priorite"],
+  select[name="priorite"] option {
+    color: #212529 !important;
+  }
+
+  select[name="priorite"] option[value="critique"] {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+  }
+
+  select[name="priorite"] option[value="haute"] {
+    background-color: #fff7ed !important;
+    color: #9a3412 !important;
+  }
+
+  select[name="priorite"] option[value="moyenne"] {
+    background-color: #eff6ff !important;
+    color: #1e40af !important;
+  }
+
+  select[name="priorite"] option[value="basse"] {
+    background-color: #f0fdf4 !important;
+    color: #166534 !important;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-lg-9">
@@ -104,12 +133,16 @@
 
 {% block extra_js %}
 <script>
-// Coloriser le select priorité dynamiquement
 const selPriorite = document.querySelector('[name="priorite"]');
-const colors = { critique: '#fee2e2', haute: '#fff7ed', moyenne: '#eff6ff', basse: '#f0fdf4' };
+const bgColors  = { critique: '#fee2e2', haute: '#fff7ed', moyenne: '#eff6ff', basse: '#f0fdf4' };
+const textColors = { critique: '#991b1b', haute: '#9a3412', moyenne: '#1e40af', basse: '#166534' };
+
 function updatePrioriteColor() {
-  selPriorite.style.background = colors[selPriorite.value] || '';
+  const val = selPriorite.value;
+  selPriorite.style.backgroundColor = bgColors[val]  || '';
+  selPriorite.style.color           = textColors[val] || '#212529';
 }
+
 selPriorite.addEventListener('change', updatePrioriteColor);
 updatePrioriteColor();
 </script>
