@@ -181,7 +181,7 @@ for data in incidents_data:
         impact=data.get('impact', ''),
         cause_racine=data.get('cause_racine', ''),
         solution_appliquee=data.get('solution_appliquee', ''),
-        cree_par=admin,
+        cree_par=data.get('cree_par', admin),
         assigne_a=data.get('assigne'),
         date_creation=timezone.now() + timedelta(days=data['jours']),
     )

@@ -10,10 +10,89 @@ import json
 import calendar
 
 from .models import Incident, Commentaire, Equipement, HistoriqueStatut, Notification, ProfilUtilisateur
-from .forms import IncidentForm, CommentaireForm, EquipementForm, FiltreIncidentForm, ProfilForm
+from .forms import CommentaireForm, EquipementForm, FiltreIncidentForm, ProfilForm
 from .utils import generer_rapport_pdf
+from .workflow_forms import WorkflowIncidentForm
 from datetime import datetime, timedelta
 from django.db.models.functions import TruncDate, TruncWeek, TruncMonth
+
+
+def get_user_role(user):
+    if user.is_superuser:
+        return 'admin'
+    profil = getattr(user, 'profil', None)
+    return getattr(profil, 'role', 'utilisateur')
+
+
+def incident_queryset_for_user(user):
+    role = get_user_role(user)
+    qs = Incident.objects.select_related('cree_par', 'assigne_a').prefetch_related('equipements')
+    if role == 'admin':
+        return qs
+    if role == 'technicien':
+        return qs.filter(assigne_a=user)
+    return qs.filter(Q(cree_par=user) | Q(assigne_a=user))
+
+
+def get_default_admin():
+    return User.objects.filter(is_active=True, profil__role='admin').order_by('id').first()
+
+
+def can_edit_incident(user, incident):
+    role = get_user_role(user)
+    if role == 'admin':
+        return True
+    if role == 'technicien':
+        return incident.assigne_a_id == user.id
+    return incident.cree_par_id == user.id and incident.statut == 'ouvert'
+
+
+def can_delete_incident(user):
+    return get_user_role(user) == 'admin'
+
+
+def available_statuses_for_user(user, incident):
+    role = get_user_role(user)
+    if role == 'admin':
+        return ['ouvert', 'en_cours']
+    if role == 'technicien' and incident.assigne_a_id == user.id:
+        return ['en_cours', 'resolu', 'ferme']
+    return []
+
+
+def validate_incident_workflow(user, incident, ancien_statut):
+    role = get_user_role(user)
+
+    if role == 'utilisateur':
+        incident.statut = 'ouvert'
+        admin_user = get_default_admin()
+        if not admin_user:
+            return "Aucun administrateur n'est disponible pour recevoir cet incident."
+        incident.assigne_a = admin_user
+        return None
+
+    if role == 'admin':
+        if incident.assigne_a:
+            assignee_role = get_user_role(incident.assigne_a)
+            if assignee_role != 'technicien':
+                return "Un administrateur doit adresser l'incident a un technicien."
+            if incident.statut == 'ouvert':
+                incident.statut = 'en_cours'
+        elif incident.statut != 'ouvert':
+            return "Sans technicien assigne, l'incident doit rester ouvert."
+        return None
+
+    if role == 'technicien':
+        if incident.assigne_a_id != user.id:
+            return "Vous pouvez seulement traiter les incidents qui vous sont assignes."
+        incident.assigne_a = user
+        if incident.statut not in ['en_cours', 'resolu', 'ferme']:
+            return "Le technicien peut uniquement mettre un incident en cours, resolu ou ferme."
+        if incident.statut in ['resolu', 'ferme'] and not incident.solution_appliquee:
+            return "Renseignez la solution appliquee avant de resoudre ou clore l'incident."
+        return None
+
+    return "Votre role ne permet pas cette action."
 
 @login_required
 def dashboard(request):
@@ -29,7 +108,7 @@ def dashboard(request):
     date_fin = request.GET.get('date_fin', '')
     
     # Base queryset pour les incidents
-    incidents_queryset = Incident.objects.select_related('cree_par', 'assigne_a')
+    incidents_queryset = incident_queryset_for_user(request.user)
     
     # Appliquer les filtres de recherche
     if recherche:
@@ -229,7 +308,7 @@ def dashboard(request):
 @login_required
 def liste_incidents(request):
     form_filtre = FiltreIncidentForm(request.GET)
-    qs = Incident.objects.select_related('cree_par', 'assigne_a').prefetch_related('equipements')
+    qs = incident_queryset_for_user(request.user)
 
     if form_filtre.is_valid():
         data = form_filtre.cleaned_data
@@ -267,7 +346,7 @@ def liste_incidents(request):
 @login_required
 def detail_incident(request, pk):
     incident = get_object_or_404(
-        Incident.objects.select_related('cree_par', 'assigne_a').prefetch_related('equipements', 'commentaires__auteur'),
+        incident_queryset_for_user(request.user).prefetch_related('commentaires__auteur'),
         pk=pk
     )
     form_commentaire = CommentaireForm()
@@ -290,86 +369,104 @@ def detail_incident(request, pk):
         'form_commentaire': form_commentaire,
         'historique': historique,
         'nb_notifs': nb_notifs,
+        'peut_modifier': can_edit_incident(request.user, incident),
+        'peut_supprimer': can_delete_incident(request.user),
+        'statuts_disponibles': available_statuses_for_user(request.user, incident),
     })
 
 
 @login_required
 def creer_incident(request):
     if request.method == 'POST':
-        form = IncidentForm(request.POST)
+        form = WorkflowIncidentForm(request.POST, user=request.user)
         if form.is_valid():
             incident = form.save(commit=False)
             incident.cree_par = request.user
-            incident.save()
-            form.save_m2m()
-
-            # Créer historique initial
-            HistoriqueStatut.objects.create(
-                incident=incident,
-                ancien_statut='',
-                nouveau_statut=incident.statut,
-                modifie_par=request.user,
-                commentaire='Incident créé'
-            )
-
-            # Notification si assigné
-            if incident.assigne_a and incident.assigne_a != request.user:
-                Notification.objects.create(
-                    utilisateur=incident.assigne_a,
+            erreur_workflow = validate_incident_workflow(request.user, incident, '')
+            if erreur_workflow:
+                form.add_error(None, erreur_workflow)
+            else:
+                incident.save()
+                form.save_m2m()
+                HistoriqueStatut.objects.create(
                     incident=incident,
-                    message=f'Nouvel incident assigné : {incident.titre}'
+                    ancien_statut='',
+                    nouveau_statut=incident.statut,
+                    modifie_par=request.user,
+                    commentaire='Incident cree'
                 )
-
-            messages.success(request, f'Incident #{incident.id} créé avec succès.')
-            return redirect('detail_incident', pk=incident.pk)
+                if incident.assigne_a and incident.assigne_a != request.user:
+                    Notification.objects.create(
+                        utilisateur=incident.assigne_a,
+                        incident=incident,
+                        message=f'Nouvel incident assigne : {incident.titre}'
+                    )
+                messages.success(request, f'Incident #{incident.id} cree avec succes.')
+                return redirect('detail_incident', pk=incident.pk)
     else:
-        form = IncidentForm()
+        form = WorkflowIncidentForm(user=request.user)
 
     nb_notifs = Notification.objects.filter(utilisateur=request.user, lue=False).count()
     return render(request, 'incidents/form_incident.html', {
-        'form': form, 'action': 'Créer', 'nb_notifs': nb_notifs
+        'form': form, 'action': 'Creer', 'nb_notifs': nb_notifs
     })
 
 
 @login_required
 def modifier_incident(request, pk):
-    incident = get_object_or_404(Incident, pk=pk)
+    incident = get_object_or_404(incident_queryset_for_user(request.user), pk=pk)
+    if not can_edit_incident(request.user, incident):
+        messages.error(request, "Vous n'avez pas l'autorisation de modifier cet incident.")
+        return redirect('detail_incident', pk=incident.pk)
+
     ancien_statut = incident.statut
 
     if request.method == 'POST':
-        form = IncidentForm(request.POST, instance=incident)
+        form = WorkflowIncidentForm(request.POST, instance=incident, user=request.user)
         if form.is_valid():
             incident = form.save(commit=False)
+            erreur_workflow = validate_incident_workflow(request.user, incident, ancien_statut)
+            if erreur_workflow:
+                form.add_error(None, erreur_workflow)
+            else:
+                nouveau_statut = incident.statut
+                if ancien_statut != nouveau_statut:
+                    if nouveau_statut == 'resolu' and not incident.date_resolution:
+                        incident.date_resolution = timezone.now()
+                    elif nouveau_statut != 'resolu':
+                        incident.date_resolution = None
 
-            # Enregistrer changement de statut
-            nouveau_statut = form.cleaned_data['statut']
-            if ancien_statut != nouveau_statut:
-                if nouveau_statut == 'resolu':
-                    incident.date_resolution = timezone.now()
-                elif nouveau_statut == 'ferme':
-                    incident.date_fermeture = timezone.now()
+                    if nouveau_statut == 'ferme' and not incident.date_fermeture:
+                        incident.date_fermeture = timezone.now()
+                    elif nouveau_statut != 'ferme':
+                        incident.date_fermeture = None
 
-                HistoriqueStatut.objects.create(
-                    incident=incident,
-                    ancien_statut=ancien_statut,
-                    nouveau_statut=nouveau_statut,
-                    modifie_par=request.user,
-                )
-
-                # Notification au créateur
-                if incident.cree_par and incident.cree_par != request.user:
-                    Notification.objects.create(
-                        utilisateur=incident.cree_par,
+                    HistoriqueStatut.objects.create(
                         incident=incident,
-                        message=f'Incident #{incident.id} : statut changé en "{nouveau_statut}"'
+                        ancien_statut=ancien_statut,
+                        nouveau_statut=nouveau_statut,
+                        modifie_par=request.user,
                     )
 
-            incident.save()
-            form.save_m2m()
-            messages.success(request, f'Incident #{incident.id} modifié avec succès.')
-            return redirect('detail_incident', pk=incident.pk)
+                    if incident.cree_par and incident.cree_par != request.user:
+                        Notification.objects.create(
+                            utilisateur=incident.cree_par,
+                            incident=incident,
+                            message=f'Incident #{incident.id} : statut change en "{nouveau_statut}"'
+                        )
+
+                incident.save()
+                form.save_m2m()
+                if incident.assigne_a and incident.assigne_a != request.user:
+                    Notification.objects.create(
+                        utilisateur=incident.assigne_a,
+                        incident=incident,
+                        message=f'Incident #{incident.id} vous a ete adresse.'
+                    )
+                messages.success(request, f'Incident #{incident.id} modifie avec succes.')
+                return redirect('detail_incident', pk=incident.pk)
     else:
-        form = IncidentForm(instance=incident)
+        form = WorkflowIncidentForm(instance=incident, user=request.user)
 
     nb_notifs = Notification.objects.filter(utilisateur=request.user, lue=False).count()
     return render(request, 'incidents/form_incident.html', {
@@ -379,11 +476,14 @@ def modifier_incident(request, pk):
 
 @login_required
 def supprimer_incident(request, pk):
-    incident = get_object_or_404(Incident, pk=pk)
+    incident = get_object_or_404(incident_queryset_for_user(request.user), pk=pk)
+    if not can_delete_incident(request.user):
+        messages.error(request, "Seul l'administrateur peut supprimer un incident.")
+        return redirect('detail_incident', pk=incident.pk)
     if request.method == 'POST':
         num = incident.id
         incident.delete()
-        messages.success(request, f'Incident #{num} supprimé.')
+        messages.success(request, f'Incident #{num} supprime.')
         return redirect('liste_incidents')
     nb_notifs = Notification.objects.filter(utilisateur=request.user, lue=False).count()
     return render(request, 'incidents/confirmer_suppression.html', {
@@ -395,18 +495,26 @@ def supprimer_incident(request, pk):
 def changer_statut_ajax(request, pk):
     """Changement rapide de statut via AJAX"""
     if request.method == 'POST':
-        incident = get_object_or_404(Incident, pk=pk)
+        incident = get_object_or_404(incident_queryset_for_user(request.user), pk=pk)
         data = json.loads(request.body)
         nouveau_statut = data.get('statut')
 
-        statuts_valides = [s[0] for s in Incident.STATUT]
+        statuts_valides = available_statuses_for_user(request.user, incident)
         if nouveau_statut in statuts_valides:
             ancien = incident.statut
             incident.statut = nouveau_statut
+            erreur_workflow = validate_incident_workflow(request.user, incident, ancien)
+            if erreur_workflow:
+                return JsonResponse({'success': False, 'error': erreur_workflow}, status=400)
+
             if nouveau_statut == 'resolu':
                 incident.date_resolution = timezone.now()
+                incident.date_fermeture = None
             elif nouveau_statut == 'ferme':
                 incident.date_fermeture = timezone.now()
+            else:
+                incident.date_resolution = None
+                incident.date_fermeture = None
             incident.save()
 
             HistoriqueStatut.objects.create(
