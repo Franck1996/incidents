@@ -189,6 +189,12 @@ class ProfilUtilisateur(models.Model):
     telephone = models.CharField(max_length=20, blank=True)
     departement = models.CharField(max_length=100, blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    derniere_activite = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Profil de {self.user.username} ({self.get_role_display()})"
+
+    def est_en_ligne(self):
+        if not self.derniere_activite:
+            return False
+        return self.derniere_activite >= timezone.now() - timezone.timedelta(minutes=5)

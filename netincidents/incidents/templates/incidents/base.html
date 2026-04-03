@@ -13,54 +13,232 @@
   <style>
     :root {
       --sidebar-width: 260px;
-      --sidebar-bg: #0f172a;
+      --sidebar-bg: linear-gradient(180deg, #0b1220 0%, #111c34 52%, #18263f 100%);
       --sidebar-text: #94a3b8;
-      --sidebar-active: #3b82f6;
+      --sidebar-active: #f97316;
       --topbar-h: 64px;
-      --accent: #3b82f6;
-      --accent-dark: #1d4ed8;
+      --accent: #f97316;
+      --accent-dark: #dc2626;
+      --accent-soft: #ffedd5;
+      --surface: rgba(255,255,255,.78);
+      --surface-strong: #ffffff;
+      --border-soft: rgba(148, 163, 184, .22);
+      --ink: #0f172a;
+      --muted: #64748b;
+      --presence-card-bg: rgba(15, 23, 42, 0.56);
+      --presence-border: rgba(148, 163, 184, 0.12);
     }
     * { font-family: 'Inter', sans-serif; }
-    body { background: #f1f5f9; min-height: 100vh; }
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(249,115,22,.10), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(239,68,68,.08), transparent 26%),
+        linear-gradient(180deg, #f7fafc 0%, #eef4f7 100%);
+      min-height: 100vh;
+      color: var(--ink);
+    }
 
     /* ── SIDEBAR ── */
     #sidebar {
       position: fixed; top: 0; left: 0; height: 100vh;
       width: var(--sidebar-width); background: var(--sidebar-bg);
       z-index: 1000; transition: all .3s ease; overflow-y: auto;
+      box-shadow: 16px 0 40px rgba(2, 6, 23, .18);
     }
     #sidebar .sidebar-brand {
       padding: 1.5rem 1.25rem;
       border-bottom: 1px solid rgba(255,255,255,.08);
     }
     #sidebar .brand-icon {
-      width: 40px; height: 40px; background: #f69b3b;
+      width: 42px; height: 42px; background: linear-gradient(135deg, #f59e0b, #ef4444);
       border-radius: 10px; display: inline-flex; align-items: center;
       justify-content: center; font-size: 1.25rem; margin-right: .75rem;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, .18);
     }
-    #sidebar .brand-text { color: #dd1313; font-weight: 700; font-size: 1.1rem; }
-    #sidebar .brand-sub { color: #1cdd07; font-size: .7rem; }
+    #sidebar .brand-text { color: #f8fafc; font-weight: 700; font-size: 1.1rem; letter-spacing: .01em; }
+    #sidebar .brand-sub { color: #fdba74; font-size: .72rem; }
     #sidebar .nav-section {
       padding: .75rem 1.25rem .25rem;
-      color: #0a9fdb; font-size: .7rem; font-weight: 600;
+      color: #fdba74; font-size: .68rem; font-weight: 700;
       letter-spacing: .08em; text-transform: uppercase;
     }
     #sidebar .nav-link {
-      color: #d99a07; padding: .625rem 1.25rem;
-      border-radius: 8px; margin: 2px .75rem;
+      color: #dbe7ff; padding: .68rem 1rem;
+      border-radius: 12px; margin: 4px .75rem;
       display: flex; align-items: center; gap: .75rem;
       font-size: .875rem; transition: all .2s;
+      border: 1px solid transparent;
+      background: rgba(255,255,255,.02);
     }
-    #sidebar .nav-link:hover { background: rgba(255,255,255,.07); color: #e2e8f0; }
-    #sidebar .nav-link.active { background: rgba(59,130,246,.2); color: var(--accent); font-weight: 600; }
+    #sidebar .nav-link:hover {
+      background: rgba(148,163,184,.12);
+      color: #fff;
+      border-color: rgba(148,163,184,.12);
+      transform: translateX(2px);
+    }
+    #sidebar .nav-link.active {
+      background: linear-gradient(90deg, rgba(249,115,22,.2), rgba(239,68,68,.12));
+      color: #f8fafc;
+      font-weight: 600;
+      border-color: rgba(249,115,22,.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
     #sidebar .nav-link .bi { font-size: 1rem; width: 18px; text-align: center; }
     #sidebar .badge-nav { margin-left: auto; font-size: .65rem; }
+    #sidebar .presence-card {
+      margin: .75rem;
+      padding: 1rem;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at top right, rgba(249,115,22,.18), transparent 34%),
+        linear-gradient(180deg, rgba(15,23,42,.94), var(--presence-card-bg));
+      border: 1px solid var(--presence-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 12px 30px rgba(2,6,23,.18);
+    }
+    #sidebar .presence-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: .8rem;
+    }
+    #sidebar .presence-title {
+      color: #f8fafc;
+      font-size: .84rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+    }
+    #sidebar .presence-subtitle {
+      color: #8fb0d8;
+      font-size: .68rem;
+      margin-top: .1rem;
+    }
+    #sidebar .presence-count {
+      min-width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(249,115,22,.24), rgba(239,68,68,.16));
+      border: 1px solid rgba(249,115,22,.24);
+      color: #ffedd5;
+    }
+    #sidebar .presence-count strong {
+      font-size: .95rem;
+      line-height: 1;
+    }
+    #sidebar .presence-count span {
+      font-size: .56rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    #sidebar .presence-user {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .7rem .15rem;
+      color: #cbd5e1;
+      font-size: .8rem;
+      border-bottom: 1px solid rgba(148,163,184,.08);
+    }
+    #sidebar .presence-user:last-child { border-bottom: 0; }
+    #sidebar .presence-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(249,115,22,.26), rgba(239,68,68,.18));
+      border: 1px solid rgba(249,115,22,.16);
+      color: #fff7ed;
+      font-weight: 700;
+      font-size: .82rem;
+      flex-shrink: 0;
+    }
+    #sidebar .presence-content {
+      min-width: 0;
+      flex: 1;
+    }
+    #sidebar .presence-name {
+      color: #f8fafc;
+      font-size: .78rem;
+      font-weight: 600;
+      line-height: 1.15;
+    }
+    #sidebar .presence-meta {
+      color: #94a3b8;
+      font-size: .68rem;
+      line-height: 1.2;
+      margin-top: .12rem;
+    }
+    #sidebar .presence-role {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .18rem .5rem;
+      border-radius: 999px;
+      background: rgba(148,163,184,.11);
+      color: #cbd5e1;
+      font-size: .62rem;
+      margin-top: .25rem;
+    }
+    #sidebar .presence-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .3rem;
+      flex-shrink: 0;
+      min-width: 50px;
+    }
+    #sidebar .presence-label {
+      font-size: .58rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+    #sidebar .presence-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+    }
+    #sidebar .presence-dot.online {
+      background: #f97316;
+      box-shadow: 0 0 0 4px rgba(249,115,22,.16);
+    }
+    #sidebar .presence-dot.online::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1px solid rgba(249,115,22,.35);
+      animation: pulseOnline 1.8s ease-out infinite;
+    }
+    #sidebar .presence-dot.offline { background: #64748b; }
+    #sidebar .presence-empty {
+      padding: .7rem 0 .2rem;
+      text-align: center;
+      color: #94a3b8;
+      font-size: .72rem;
+    }
+    @keyframes pulseOnline {
+      0% { transform: scale(.8); opacity: .8; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
 
     /* ── TOPBAR ── */
     #topbar {
       position: fixed; top: 0; left: var(--sidebar-width); right: 0;
-      height: var(--topbar-h); background: #fff;
-      border-bottom: 1px solid #e2e8f0; z-index: 999;
+      height: var(--topbar-h);
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(226,232,240,.9);
+      box-shadow: 0 10px 30px rgba(15,23,42,.04);
+      z-index: 999;
       display: flex; align-items: center; padding: 0 1.5rem;
       gap: 1rem;
     }
@@ -68,11 +246,17 @@
     #topbar .topbar-btn {
       width: 38px; height: 38px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      background: #f8fafc; border: 1px solid #e2e8f0;
+      background: rgba(248,250,252,.92);
+      border: 1px solid rgba(226,232,240,.95);
       color: #64748b; cursor: pointer; transition: all .2s;
       text-decoration: none; position: relative;
     }
-    #topbar .topbar-btn:hover { background: #e2e8f0; color: #1e293b; }
+    #topbar .topbar-btn:hover {
+      background: #ffffff;
+      color: #1e293b;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15,23,42,.08);
+    }
     .notif-badge {
       position: absolute; top: -4px; right: -4px;
       background: #ef4444; color: #fff; border-radius: 50%;
@@ -89,13 +273,29 @@
     .main-inner { padding: 1.75rem; }
 
     /* ── CARDS ── */
-    .card { border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: none; }
-    .card-header { background: #a32020; border-bottom: 1px solid #e2e8f0; font-weight: 600; }
+    .card {
+      border: 1px solid var(--border-soft);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.82));
+      box-shadow: 0 18px 40px rgba(15,23,42,.06);
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(248,250,252,.78));
+      border-bottom: 1px solid rgba(226,232,240,.9);
+      font-weight: 700;
+      color: #0f172a;
+    }
 
     /* ── STAT CARDS ── */
     .stat-card {
-      border-radius: 12px; padding: 1.25rem;
-      border: 1px solid #e2e8f0; background: #fff;
+      border-radius: 20px;
+      padding: 1.25rem;
+      border: 1px solid rgba(226,232,240,.95);
+      background:
+        radial-gradient(circle at top right, rgba(13,148,136,.08), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.88));
+      box-shadow: 0 18px 34px rgba(15,23,42,.05);
     }
     .stat-card .stat-icon {
       width: 46px; height: 46px; border-radius: 10px;
@@ -136,6 +336,7 @@
     .table-hover tbody tr:hover { background: #f8fafc; }
     .table th { font-size: .8rem; font-weight: 600; color: #64748b;
                 text-transform: uppercase; letter-spacing: .04em; }
+    .table > :not(caption) > * > * { border-bottom-color: rgba(226,232,240,.85); }
 
     /* ── ALERTS / MESSAGES ── */
     .django-messages { position: fixed; top: calc(var(--topbar-h) + 1rem); right: 1rem; z-index: 9999; width: 360px; }
@@ -146,6 +347,11 @@
     [data-bs-theme="dark"] .card { background: #1e293b; border-color: #334155; }
     [data-bs-theme="dark"] .stat-card { background: #1e293b; border-color: #334155; }
     [data-bs-theme="dark"] .table th { color: #94a3b8; }
+    [data-bs-theme="dark"] #sidebar .presence-card {
+      background:
+        radial-gradient(circle at top right, rgba(249,115,22,.2), transparent 34%),
+        linear-gradient(180deg, rgba(15,23,42,.95), rgba(15,23,42,.82));
+    }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
@@ -153,12 +359,61 @@
       #sidebar.show { transform: translateX(0); }
       #topbar { left: 0; }
       #main { margin-left: 0; }
+      #sidebar .presence-card { margin-bottom: 1.5rem; }
     }
 
     /* ── MISC ── */
-    .btn-primary { background: var(--accent); border-color: var(--accent); }
-    .btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
-    .form-control:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    .btn {
+      border-radius: 12px;
+      font-weight: 600;
+      transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #14b8a6);
+      border-color: transparent;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--accent-dark), #0f766e);
+      border-color: transparent;
+      color: #fff;
+    }
+    .btn-outline-primary {
+      color: var(--accent);
+      border-color: rgba(15,118,110,.28);
+      background: rgba(255,255,255,.7);
+    }
+    .btn-outline-primary:hover {
+      background: rgba(15,118,110,.08);
+      color: var(--accent-dark);
+      border-color: rgba(15,118,110,.4);
+    }
+    .btn-outline-secondary {
+      color: #475569;
+      border-color: rgba(148,163,184,.35);
+      background: rgba(255,255,255,.6);
+    }
+    .btn-outline-danger {
+      background: rgba(255,255,255,.65);
+    }
+    .form-control, .form-select {
+      border-radius: 14px;
+      border: 1px solid rgba(203,213,225,.95);
+      background: rgba(255,255,255,.92);
+      color: #0f172a;
+      min-height: 46px;
+    }
+    textarea.form-control { min-height: 120px; }
+    .form-control::placeholder { color: #94a3b8; }
+    .form-control:focus, .form-select:focus {
+      border-color: rgba(15,118,110,.45);
+      box-shadow: 0 0 0 4px rgba(20,184,166,.12);
+      background: #fff;
+    }
     .page-link { color: var(--accent); }
     .page-item.active .page-link { background: var(--accent); border-color: var(--accent); }
   </style>
@@ -212,9 +467,55 @@
     <a href="/admin/" class="nav-link" target="_blank">
       <i class="bi bi-shield-lock-fill"></i> Administration
     </a>
-    <a href="{% url 'logout' %}" class="nav-link" onclick="return confirm('Se déconnecter ?')">
-      <i class="bi bi-box-arrow-left"></i> Déconnexion
-    </a>
+    <form method="post" action="{% url 'logout' %}" class="mx-3 mt-1">
+      {% csrf_token %}
+      <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start"
+              onclick="return confirm('Se deconnecter ?')">
+        <i class="bi bi-box-arrow-left"></i> Deconnexion
+      </button>
+    </form>
+
+    <div class="nav-section">Presence</div>
+    <div class="presence-card">
+      <div class="presence-header">
+        <div>
+          <div class="presence-title">Presence en direct</div>
+          <div class="presence-subtitle">Visibilite immediate des sessions</div>
+        </div>
+        <div class="presence-count">
+          <strong>{{ total_utilisateurs_en_ligne }}</strong>
+          <span>online</span>
+        </div>
+      </div>
+      {% for profil in utilisateurs_connectes %}
+      <div class="presence-user">
+        <div class="presence-avatar">
+          {{ profil.user.username|slice:":1"|upper }}
+        </div>
+        <div class="presence-content">
+          <div class="presence-name">
+            {{ profil.user.get_full_name|default:profil.user.username }}
+            {% if request.user.id == profil.user.id %}<span class="text-info">(vous)</span>{% endif %}
+          </div>
+          <div class="presence-role">{{ profil.get_role_display }}</div>
+          <div class="presence-meta">
+            {% if profil.derniere_activite %}
+              Derniere activite: {{ profil.derniere_activite|date:"d/m H:i" }}
+            {% else %}
+              Jamais vu
+            {% endif %}
+          </div>
+        </div>
+        <div class="presence-state">
+          <span class="presence-dot {% if profil.est_en_ligne %}online{% else %}offline{% endif %}"
+                title="{% if profil.est_en_ligne %}En ligne{% else %}Hors ligne{% endif %}"></span>
+          <span class="presence-label">{% if profil.est_en_ligne %}online{% else %}offline{% endif %}</span>
+        </div>
+      </div>
+      {% empty %}
+      <div class="presence-empty">Aucun utilisateur visible pour le moment.</div>
+      {% endfor %}
+    </div>
   </div>
 </nav>
 
@@ -233,6 +534,10 @@
   <a href="{% url 'mon_profil' %}" class="topbar-btn" title="Profil">
     <i class="bi bi-person"></i>
   </a>
+  <div class="small text-muted d-none d-md-block">
+    {{ request.user.get_full_name|default:request.user.username }}
+    {% if request.user.profil %}· {{ request.user.profil.get_role_display }}{% endif %}
+  </div>
   <button class="topbar-btn" id="themeToggle" title="Mode sombre" onclick="toggleTheme()">
     <i class="bi bi-moon-stars"></i>
   </button>

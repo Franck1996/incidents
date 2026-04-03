@@ -146,9 +146,11 @@
     <div class="card mb-3">
       <div class="card-header py-3">Actions rapides</div>
       <div class="card-body d-grid gap-2">
+        {% if peut_modifier %}
         <a href="{% url 'modifier_incident' incident.pk %}" class="btn btn-primary btn-sm">
           <i class="bi bi-pencil me-2"></i>Modifier l'incident
         </a>
+        {% endif %}
         <a href="{% url 'rapport_pdf_incident' incident.pk %}" class="btn btn-outline-danger btn-sm">
           <i class="bi bi-file-earmark-pdf me-2"></i>Télécharger le rapport PDF
         </a>
@@ -164,10 +166,12 @@
       <div class="card-header py-3">Changer le statut</div>
       <div class="card-body d-grid gap-1">
         {% for val, label in incident.STATUT %}
+        {% if val in statuts_disponibles %}
         <button class="btn btn-sm {% if incident.statut == val %}btn-primary{% else %}btn-outline-secondary{% endif %}"
                 onclick="changerStatutRapide('{{ val }}')">
           {{ label }}
         </button>
+        {% endif %}
         {% endfor %}
       </div>
     </div>
